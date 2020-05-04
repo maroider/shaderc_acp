@@ -110,10 +110,13 @@ impl<'a> CompilationRun<'a> {
                                     PathBuf::from(env::var("OUT_DIR").unwrap()).join("SPIR-V");
                                 match fs::create_dir(&spirv_dir) {
                                     Ok(ok) => ok,
-                                    Err(err) => {
-                                        errors.push(err.into());
-                                        continue;
-                                    }
+                                    Err(err) => match err.kind() {
+                                        std::io::ErrorKind::AlreadyExists => {}
+                                        _ => {
+                                            errors.push(err.into());
+                                            continue;
+                                        }
+                                    },
                                 }
                                 let artifact_name = shader_path_to_file_name(entry.path());
                                 match fs::write(
