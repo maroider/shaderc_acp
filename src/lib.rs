@@ -121,9 +121,15 @@ impl<'a> CompilationRun<'a> {
                                 let artifact_name = shader_path_to_file_name(entry.path());
                                 match fs::write(
                                     spirv_dir.join(artifact_name),
-                                    artifact.as_binary_u8(),
+                                    bytemuck::cast_slice(artifact.as_binary()),
                                 ) {
-                                    Ok(ok) => ok,
+                                    Ok(ok) => {
+                                        println!(
+                                            "cargo:rerun-if-changed={}",
+                                            entry.path().display()
+                                        );
+                                        ok
+                                    }
                                     Err(err) => {
                                         errors.push(err.into());
                                         continue;
